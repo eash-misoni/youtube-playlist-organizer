@@ -1,5 +1,6 @@
 from sqlalchemy import Column, Integer, String, DateTime
 from sqlalchemy.sql import func
+from sqlalchemy.orm import relationship
 from ..database import Base
 
 class User(Base):
@@ -10,4 +11,7 @@ class User(Base):
     google_id = Column(String, unique=True)
     name = Column(String)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
-    updated_at = Column(DateTime(timezone=True), onupdate=func.now()) 
+    updated_at = Column(DateTime(timezone=True), onupdate=func.now())
+
+    # リレーションシップ
+    playlists = relationship("Playlist", back_populates="user") 

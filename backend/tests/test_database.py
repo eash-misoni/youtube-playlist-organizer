@@ -2,7 +2,10 @@ import pytest
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from ..app.database import Base, get_db
+from ..app.models.playlist import Playlist
+from ..app.models.user import User
 from ..app.config import settings
+from datetime import datetime, UTC
 
 # テスト用のデータベース設定
 SQLALCHEMY_DATABASE_URL = "sqlite:///./test.db"
@@ -20,7 +23,101 @@ def db_session():
         session.close()
         Base.metadata.drop_all(bind=engine)
 
+@pytest.fixture(scope="function")
+def test_user(db_session):
+    """テスト用のユーザーを作成"""
+    user = User(
+        email="test@example.com",
+        google_id="test_google_id",
+        name="Test User",
+        created_at=datetime.now(UTC),
+        updated_at=datetime.now(UTC)
+    )
+    db_session.add(user)
+    db_session.commit()
+    return user
+
 def test_database_connection(db_session):
     """データベース接続のテスト"""
-    # セッションが正常に作成されていることを確認
-    assert db_session is not None 
+    assert db_session is not None
+
+def test_create_playlist(db_session, test_user):
+    """プレイリストの作成テスト"""
+    playlist = Playlist(
+        title="テストプレイリスト",
+        description="テスト用のプレイリストです",
+        youtube_playlist_id="TEST_ID_123",
+        user_id=test_user.id,
+        created_at=datetime.now(UTC),
+        updated_at=datetime.now(UTC)
+    )
+    
+    db_session.add(playlist)
+    db_session.commit()
+    
+    # データベースから取得して確認
+    saved_playlist = db_session.query(Playlist).first()
+    assert saved_playlist.title == "テストプレイリスト"
+    assert saved_playlist.youtube_playlist_id == "TEST_ID_123"
+    assert saved_playlist.user_id == test_user.id
+
+def test_read_playlist(db_session, test_user):
+    """プレイリストの読み取りテスト"""
+    # テストデータの作成
+    playlist = Playlist(
+        title="読み取りテスト",
+        youtube_playlist_id="READ_TEST_123",
+        user_id=test_user.id,
+        created_at=datetime.now(UTC),
+        updated_at=datetime.now(UTC)
+    )
+    db_session.add(playlist)
+    db_session.commit()
+    
+    # データの読み取り
+    read_playlist = db_session.query(Playlist).filter_by(youtube_playlist_id="READ_TEST_123").first()
+    assert read_playlist is not None
+    assert read_playlist.title == "読み取りテスト"
+    assert read_playlist.user_id == test_user.id
+
+def test_update_playlist(db_session, test_user):
+    """プレイリストの更新テスト"""
+    # テストデータの作成
+    playlist = Playlist(
+        title="更新前",
+        youtube_playlist_id="UPDATE_TEST_123",
+        user_id=test_user.id,
+        created_at=datetime.now(UTC),
+        updated_at=datetime.now(UTC)
+    )
+    db_session.add(playlist)
+    db_session.commit()
+    
+    # データの更新
+    playlist.title = "更新後"
+    db_session.commit()
+    
+    # 更新の確認
+    updated_playlist = db_session.query(Playlist).filter_by(youtube_playlist_id="UPDATE_TEST_123").first()
+    assert updated_playlist.title == "更新後"
+
+def test_delete_playlist(db_session, test_user):
+    """プレイリストの削除テスト"""
+    # テストデータの作成
+    playlist = Playlist(
+        title="削除テスト",
+        youtube_playlist_id="DELETE_TEST_123",
+        user_id=test_user.id,
+        created_at=datetime.now(UTC),
+        updated_at=datetime.now(UTC)
+    )
+    db_session.add(playlist)
+    db_session.commit()
+    
+    # データの削除
+    db_session.delete(playlist)
+    db_session.commit()
+    
+    # 削除の確認
+    deleted_playlist = db_session.query(Playlist).filter_by(youtube_playlist_id="DELETE_TEST_123").first()
+    assert deleted_playlist is None 
