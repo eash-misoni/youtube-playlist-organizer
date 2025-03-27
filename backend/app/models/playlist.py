@@ -1,5 +1,5 @@
 from sqlalchemy import Column, Integer, String, DateTime, ForeignKey, Table
-from sqlalchemy.orm import relationship
+from sqlalchemy.orm import relationship, validates
 from sqlalchemy.sql import func
 from ..database import Base
 
@@ -24,4 +24,10 @@ class Playlist(Base):
 
     # リレーションシップ
     user = relationship("User", back_populates="playlists")
-    videos = relationship("Video", secondary=playlist_videos, back_populates="playlists") 
+    videos = relationship("Video", secondary=playlist_videos, back_populates="playlists")
+
+    @validates('user_id')
+    def validate_user_id(self, key, value):
+        if not isinstance(value, int):
+            raise TypeError(f"{key} must be an integer")
+        return value 
