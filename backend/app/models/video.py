@@ -20,5 +20,5 @@ class Video(BaseModel):
 
     # リレーションシップ
     playlists = relationship("Playlist", secondary="playlist_videos", back_populates="videos")
-    classifications = relationship("Classification", back_populates="video")
-    classification_histories = relationship("ClassificationHistory", back_populates="video") 
+    classifications = relationship("Classification", back_populates="video", cascade="all, delete-orphan", passive_deletes=True)
+    classification_histories = relationship("ClassificationHistory", back_populates="video", cascade="all, delete-orphan", passive_deletes=True) 

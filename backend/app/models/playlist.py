@@ -9,8 +9,8 @@ import re
 playlist_videos = Table(
     'playlist_videos',
     BaseModel.metadata,
-    Column('playlist_id', Integer, ForeignKey('playlists.id')),
-    Column('video_id', Integer, ForeignKey('videos.id'))
+    Column('playlist_id', Integer, ForeignKey('playlists.id', ondelete='CASCADE')),
+    Column('video_id', Integer, ForeignKey('videos.id', ondelete='CASCADE'))
 )
 
 class Playlist(BaseModel):
@@ -19,18 +19,18 @@ class Playlist(BaseModel):
     youtube_playlist_id = Column(String(50), unique=True)  # YouTubeのプレイリストIDは通常短い
     title = Column(String(100))  # タイトルは100文字以内
     description = Column(String(500))  # 説明は500文字以内
-    user_id = Column(Integer, ForeignKey('users.id'))
+    user_id = Column(Integer, ForeignKey('users.id', ondelete='CASCADE'))
 
     # リレーションシップ
-    user = relationship("User", back_populates="playlists")
+    user = relationship("User", back_populates="playlists", passive_deletes=True)
     videos = relationship("Video", secondary=playlist_videos, back_populates="playlists")
-    classifications = relationship("Classification", back_populates="playlist")
-    classification_rules = relationship("ClassificationRule", back_populates="playlist")
-    classification_histories = relationship("ClassificationHistory", back_populates="playlist")
+    classifications = relationship("Classification", back_populates="playlist", cascade="all, delete-orphan", passive_deletes=True)
+    classification_rules = relationship("ClassificationRule", back_populates="playlist", cascade="all, delete-orphan", passive_deletes=True)
+    classification_histories = relationship("ClassificationHistory", back_populates="playlist", cascade="all, delete-orphan", passive_deletes=True)
 
     @validates('user_id')
     def validate_user_id(self, key, value):
-        if not isinstance(value, int):
+        if value is not None and not isinstance(value, int):
             raise TypeError(f"{key} must be an integer")
         return value
 
