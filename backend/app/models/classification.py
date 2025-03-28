@@ -5,8 +5,8 @@ from .base import BaseModel
 class Classification(BaseModel):
     __tablename__ = "classifications"
     
-    video_id = Column(String, ForeignKey("videos.id"), nullable=False)
-    playlist_id = Column(String, ForeignKey("playlists.id"), nullable=False)
+    video_id = Column(Integer, ForeignKey("videos.id"), nullable=False)
+    playlist_id = Column(Integer, ForeignKey("playlists.id"), nullable=False)
     user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
     confidence = Column(Float, nullable=True)
     status = Column(String, nullable=False)  # pending, completed, failed
@@ -20,7 +20,7 @@ class ClassificationRule(BaseModel):
     __tablename__ = "classification_rules"
     
     user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
-    playlist_id = Column(String, ForeignKey("playlists.id"), nullable=False)
+    playlist_id = Column(Integer, ForeignKey("playlists.id"), nullable=False)
     rule_type = Column(String, nullable=False)  # keyword, tag, channel, etc.
     rule_value = Column(String, nullable=False)
     priority = Column(Integer, nullable=False)
@@ -32,8 +32,8 @@ class ClassificationRule(BaseModel):
 class ClassificationHistory(BaseModel):
     __tablename__ = "classification_histories"
     
-    video_id = Column(String, ForeignKey("videos.id"), nullable=False)
-    playlist_id = Column(String, ForeignKey("playlists.id"), nullable=False)
+    video_id = Column(Integer, ForeignKey("videos.id"), nullable=False)
+    playlist_id = Column(Integer, ForeignKey("playlists.id"), nullable=False)
     user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
     action = Column(String, nullable=False)  # add, remove, modify
 
