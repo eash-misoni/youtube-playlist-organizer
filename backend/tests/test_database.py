@@ -1,7 +1,7 @@
 import pytest
 from sqlalchemy import create_engine, exc, event
 from sqlalchemy.orm import sessionmaker
-from ..app.database import Base, get_db
+from ..app.database import BaseModel, get_db
 from ..app.models.playlist import Playlist
 from ..app.models.user import User
 from ..app.config import settings
@@ -22,13 +22,13 @@ TestingSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engin
 @pytest.fixture(scope="function")
 def db_session():
     """テスト用のデータベースセッションを作成"""
-    Base.metadata.create_all(bind=engine)
+    BaseModel.metadata.create_all(bind=engine)
     session = TestingSessionLocal()
     try:
         yield session
     finally:
         session.close()
-        Base.metadata.drop_all(bind=engine)
+        BaseModel.metadata.drop_all(bind=engine)
 
 @pytest.fixture(scope="function")
 def test_user(db_session):
@@ -36,9 +36,7 @@ def test_user(db_session):
     user = User(
         email="test@example.com",
         google_id="test_google_id",
-        name="Test User",
-        created_at=datetime.now(UTC),
-        updated_at=datetime.now(UTC)
+        name="Test User"
     )
     db_session.add(user)
     db_session.commit()
@@ -54,9 +52,7 @@ def test_create_playlist(db_session, test_user):
         title="テストプレイリスト",
         description="テスト用のプレイリストです",
         youtube_playlist_id="TEST_ID_123",
-        user_id=test_user.id,
-        created_at=datetime.now(UTC),
-        updated_at=datetime.now(UTC)
+        user_id=test_user.id
     )
     
     db_session.add(playlist)
@@ -74,9 +70,7 @@ def test_read_playlist(db_session, test_user):
     playlist = Playlist(
         title="読み取りテスト",
         youtube_playlist_id="READ_TEST_123",
-        user_id=test_user.id,
-        created_at=datetime.now(UTC),
-        updated_at=datetime.now(UTC)
+        user_id=test_user.id
     )
     db_session.add(playlist)
     db_session.commit()
@@ -93,9 +87,7 @@ def test_update_playlist(db_session, test_user):
     playlist = Playlist(
         title="更新前",
         youtube_playlist_id="UPDATE_TEST_123",
-        user_id=test_user.id,
-        created_at=datetime.now(UTC),
-        updated_at=datetime.now(UTC)
+        user_id=test_user.id
     )
     db_session.add(playlist)
     db_session.commit()
@@ -114,9 +106,7 @@ def test_delete_playlist(db_session, test_user):
     playlist = Playlist(
         title="削除テスト",
         youtube_playlist_id="DELETE_TEST_123",
-        user_id=test_user.id,
-        created_at=datetime.now(UTC),
-        updated_at=datetime.now(UTC)
+        user_id=test_user.id
     )
     db_session.add(playlist)
     db_session.commit()
@@ -135,9 +125,7 @@ def test_playlist_unique_constraint(db_session, test_user):
     playlist1 = Playlist(
         title="テストプレイリスト1",
         youtube_playlist_id="UNIQUE_TEST_123",
-        user_id=test_user.id,
-        created_at=datetime.now(UTC),
-        updated_at=datetime.now(UTC)
+        user_id=test_user.id
     )
     db_session.add(playlist1)
     db_session.commit()
@@ -146,9 +134,7 @@ def test_playlist_unique_constraint(db_session, test_user):
     playlist2 = Playlist(
         title="テストプレイリスト2",
         youtube_playlist_id="UNIQUE_TEST_123",  # 同じID
-        user_id=test_user.id,
-        created_at=datetime.now(UTC),
-        updated_at=datetime.now(UTC)
+        user_id=test_user.id
     )
     db_session.add(playlist2)
     
@@ -163,9 +149,7 @@ def test_playlist_foreign_key_constraint(db_session):
     playlist = Playlist(
         title="テストプレイリスト",
         youtube_playlist_id="FK_TEST_123",
-        user_id=99999,  # 存在しないユーザーID
-        created_at=datetime.now(UTC),
-        updated_at=datetime.now(UTC)
+        user_id=99999  # 存在しないユーザーID
     )
     db_session.add(playlist)
     
@@ -179,9 +163,7 @@ def test_playlist_required_fields(db_session, test_user):
     # youtube_playlist_idなしでプレイリストを作成（失敗するはず）
     playlist = Playlist(
         title="テストプレイリスト",
-        user_id=test_user.id,
-        created_at=datetime.now(UTC),
-        updated_at=datetime.now(UTC)
+        user_id=test_user.id
     )
     db_session.add(playlist)
     db_session.commit()  # SQLiteではNOT NULL制約がないため成功する
@@ -189,9 +171,7 @@ def test_playlist_required_fields(db_session, test_user):
     # titleなしでプレイリストを作成（成功するはず - titleは必須ではない）
     playlist_no_title = Playlist(
         youtube_playlist_id="NO_TITLE_TEST_123",
-        user_id=test_user.id,
-        created_at=datetime.now(UTC),
-        updated_at=datetime.now(UTC)
+        user_id=test_user.id
     )
     db_session.add(playlist_no_title)
     db_session.commit()
@@ -203,10 +183,8 @@ def test_playlist_invalid_data_type(db_session, test_user):
         playlist = Playlist(
             title="テストプレイリスト",
             youtube_playlist_id="TYPE_TEST_123",
-            user_id="not_an_integer",  # 文字列を指定
-            created_at=datetime.now(UTC),
-            updated_at=datetime.now(UTC)
-        ) 
+            user_id="not_an_integer"  # 文字列を指定
+        )
 
 def test_playlist_string_length_validation(db_session, test_user):
     """プレイリストの文字列長バリデーションテスト"""
@@ -215,9 +193,7 @@ def test_playlist_string_length_validation(db_session, test_user):
         playlist = Playlist(
             title="a" * 101,  # 100文字を超える
             youtube_playlist_id="LENGTH_TEST_123",
-            user_id=test_user.id,
-            created_at=datetime.now(UTC),
-            updated_at=datetime.now(UTC)
+            user_id=test_user.id
         )
     assert "title must be 100 characters or less" in str(exc_info.value)
 
@@ -227,9 +203,7 @@ def test_playlist_string_length_validation(db_session, test_user):
             title="テストプレイリスト",
             description="a" * 501,  # 500文字を超える
             youtube_playlist_id="LENGTH_TEST_123",
-            user_id=test_user.id,
-            created_at=datetime.now(UTC),
-            updated_at=datetime.now(UTC)
+            user_id=test_user.id
         )
     assert "description must be 500 characters or less" in str(exc_info.value)
 
@@ -240,54 +214,33 @@ def test_playlist_youtube_id_validation(db_session, test_user):
         playlist = Playlist(
             title="テストプレイリスト",
             youtube_playlist_id="",  # 空文字列
-            user_id=test_user.id,
-            created_at=datetime.now(UTC),
-            updated_at=datetime.now(UTC)
+            user_id=test_user.id
         )
     assert "youtube_playlist_id cannot be empty" in str(exc_info.value)
 
-    # 不正な形式のID
+    # 不正な形式のID（短すぎる）
     with pytest.raises(ValueError) as exc_info:
         playlist = Playlist(
             title="テストプレイリスト",
-            youtube_playlist_id="invalid@id",  # 不正な文字を含む
-            user_id=test_user.id,
-            created_at=datetime.now(UTC),
-            updated_at=datetime.now(UTC)
+            youtube_playlist_id="short",  # 10文字未満
+            user_id=test_user.id
         )
-    assert "must be a valid YouTube playlist ID" in str(exc_info.value)
+    assert "youtube_playlist_id must be a valid YouTube playlist ID" in str(exc_info.value)
+
+    # 不正な形式のID（特殊文字を含む）
+    with pytest.raises(ValueError) as exc_info:
+        playlist = Playlist(
+            title="テストプレイリスト",
+            youtube_playlist_id="PL@invalid#id",  # 特殊文字を含む
+            user_id=test_user.id
+        )
+    assert "youtube_playlist_id must be a valid YouTube playlist ID" in str(exc_info.value)
 
     # 長すぎるID
     with pytest.raises(ValueError) as exc_info:
         playlist = Playlist(
             title="テストプレイリスト",
             youtube_playlist_id="a" * 51,  # 50文字を超える
-            user_id=test_user.id,
-            created_at=datetime.now(UTC),
-            updated_at=datetime.now(UTC)
+            user_id=test_user.id
         )
-    assert "youtube_playlist_id must be 50 characters or less" in str(exc_info.value)
-
-def test_playlist_datetime_validation(db_session, test_user):
-    """プレイリストの日付バリデーションテスト"""
-    # タイムゾーンなしの日付
-    with pytest.raises(ValueError) as exc_info:
-        playlist = Playlist(
-            title="テストプレイリスト",
-            youtube_playlist_id="DATETIME_TEST_123",
-            user_id=test_user.id,
-            created_at=datetime.now(),  # タイムゾーンなし
-            updated_at=datetime.now(UTC)
-        )
-    assert "created_at must be timezone-aware" in str(exc_info.value)
-
-    # 不正な型の日付
-    with pytest.raises(TypeError) as exc_info:
-        playlist = Playlist(
-            title="テストプレイリスト",
-            youtube_playlist_id="DATETIME_TEST_123",
-            user_id=test_user.id,
-            created_at="2024-03-27",  # 文字列
-            updated_at=datetime.now(UTC)
-        )
-    assert "created_at must be a datetime object" in str(exc_info.value) 
+    assert "youtube_playlist_id must be 50 characters or less" in str(exc_info.value) 

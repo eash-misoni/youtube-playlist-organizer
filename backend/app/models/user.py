@@ -1,17 +1,19 @@
-from sqlalchemy import Column, Integer, String, DateTime
-from sqlalchemy.sql import func
+from sqlalchemy import Column, String, DateTime
 from sqlalchemy.orm import relationship
-from ..database import Base
+from .base import BaseModel
 
-class User(Base):
+class User(BaseModel):
     __tablename__ = "users"
 
-    id = Column(Integer, primary_key=True, index=True)
     email = Column(String, unique=True, index=True)
     google_id = Column(String, unique=True)
     name = Column(String)
-    created_at = Column(DateTime(timezone=True), server_default=func.now())
-    updated_at = Column(DateTime(timezone=True), onupdate=func.now())
+    youtube_access_token = Column(String)
+    youtube_refresh_token = Column(String)
+    token_expires_at = Column(DateTime)
 
     # リレーションシップ
-    playlists = relationship("Playlist", back_populates="user") 
+    playlists = relationship("Playlist", back_populates="user")
+    classifications = relationship("Classification", back_populates="user")
+    classification_rules = relationship("ClassificationRule", back_populates="user")
+    classification_histories = relationship("ClassificationHistory", back_populates="user") 

@@ -1,32 +1,32 @@
 from sqlalchemy import Column, Integer, String, DateTime, ForeignKey, Table
 from sqlalchemy.orm import relationship, validates
 from sqlalchemy.sql import func
-from ..database import Base
+from .base import BaseModel
 from datetime import datetime
 import re
 
 # プレイリストと動画の関連テーブル
 playlist_videos = Table(
     'playlist_videos',
-    Base.metadata,
+    BaseModel.metadata,
     Column('playlist_id', Integer, ForeignKey('playlists.id')),
     Column('video_id', Integer, ForeignKey('videos.id'))
 )
 
-class Playlist(Base):
+class Playlist(BaseModel):
     __tablename__ = "playlists"
 
-    id = Column(Integer, primary_key=True, index=True)
     youtube_playlist_id = Column(String(50), unique=True)  # YouTubeのプレイリストIDは通常短い
     title = Column(String(100))  # タイトルは100文字以内
     description = Column(String(500))  # 説明は500文字以内
     user_id = Column(Integer, ForeignKey('users.id'))
-    created_at = Column(DateTime(timezone=True), server_default=func.now())
-    updated_at = Column(DateTime(timezone=True), onupdate=func.now())
 
     # リレーションシップ
     user = relationship("User", back_populates="playlists")
     videos = relationship("Video", secondary=playlist_videos, back_populates="playlists")
+    classifications = relationship("Classification", back_populates="playlist")
+    classification_rules = relationship("ClassificationRule", back_populates="playlist")
+    classification_histories = relationship("ClassificationHistory", back_populates="playlist")
 
     @validates('user_id')
     def validate_user_id(self, key, value):
@@ -55,12 +55,4 @@ class Playlist(Base):
     def validate_description(self, key, value):
         if value and len(value) > 500:
             raise ValueError(f"{key} must be 500 characters or less")
-        return value
-
-    @validates('created_at', 'updated_at')
-    def validate_datetime(self, key, value):
-        if not isinstance(value, datetime):
-            raise TypeError(f"{key} must be a datetime object")
-        if value.tzinfo is None:
-            raise ValueError(f"{key} must be timezone-aware")
         return value 
