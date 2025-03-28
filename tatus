@@ -1,0 +1,15 @@
+[33mcommit 632d40ed5987f512e1d536b5c2cd4c9581628678[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmain[m[33m, [m[1;31morigin/main[m[33m)[m
+Author: nishi <nishiyama.w.haruya@gmail.com>
+Date:   Fri Mar 28 17:18:51 2025 +0900
+
+    feat: データベースの参照整合性とカスケード削除を設定
+
+ backend/alembic.ini                                |   2 [32m+[m[31m-[m
+ backend/alembic/env.py                             |   7 [32m+[m[31m-[m
+ .../versions/4050cd0cc7b1_initial_migration.py     |  79 [31m--------[m
+ backend/alembic/versions/b51d9760db48_initial.py   | 138 [32m++++++++++++++[m
+ backend/app/models/classification.py               |  32 [32m++[m[31m--[m
+ backend/app/models/playlist.py                     |  16 [32m+[m[31m-[m
+ backend/app/models/video.py                        |   4 [32m+[m[31m-[m
+ backend/tests/test_complex_operations.py           | 207 [32m+++++++++++++++++++++[m
+ 8 files changed, 377 insertions(+), 108 deletions(-)

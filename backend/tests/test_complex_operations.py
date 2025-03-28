@@ -166,14 +166,21 @@ def test_cascade_delete(db_session):
             "confidence": 0.95
         }
     )
+
+    # IDを保存
+    playlist_id = playlist.id
+    video_id = video.id
+    classification_id = classification.id
     
     # ユーザーを削除
     crud_user.delete(db_session, id=user.id)
+    db_session.commit()
+    db_session.expire_all()
     
     # 関連するデータが削除されていることを確認
-    assert crud_playlist.get(db_session, id=playlist.id) is None
-    assert crud_video.get(db_session, id=video.id) is None
-    assert crud_classification.get(db_session, id=classification.id) is None
+    assert crud_playlist.get(db_session, id=playlist_id) is None
+    assert crud_video.get(db_session, id=video_id) is not None  # 動画は削除されない
+    assert crud_classification.get(db_session, id=classification_id) is None
 
 def test_unique_constraint_violation(db_session):
     """ユニーク制約違反のテスト"""

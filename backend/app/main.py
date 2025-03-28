@@ -1,6 +1,6 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from .routers import youtube
+from .routers import youtube, auth
 
 app = FastAPI(title="YouTube Playlist Organizer")
 
@@ -14,6 +14,7 @@ app.add_middleware(
 )
 
 # ルーターの追加
+app.include_router(auth.router)
 app.include_router(youtube.router)
 
 @app.get("/")
